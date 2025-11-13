@@ -59,3 +59,4 @@ Sigue estos pasos para configurar el proyecto en un nuevo entorno de desarrollo 
 
 
 ## Para un rendimiento óptimo en Windows, se recomienda activar el "Modo de programador".
+
