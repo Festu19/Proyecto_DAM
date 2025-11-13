@@ -1,15 +1,19 @@
 // lib/main.dart
 
+import 'package:casazenn/auth/auth_gate.dart';
 import 'package:flutter/material.dart';
-// 1. Importaciones necesarias para Firebase
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
-// 2. La función main ahora debe ser 'async'
+// 1. AÑADE ESTA IMPORTACIÓN
+import 'package:intl/date_symbol_data_local.dart';
+
 Future<void> main() async {
-  // 3. Asegurarse de que Flutter esté listo antes de llamar a Firebase
   WidgetsFlutterBinding.ensureInitialized();
-  // 4. Inicializar Firebase con las opciones de la plataforma actual
+
+  // 2. AÑADE ESTA LÍNEA ANTES DE INICIALIZAR FIREBASE
+  await initializeDateFormatting('es_ES', null);
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -29,16 +33,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Roboto',
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('CasaZenn'),
-          backgroundColor: Colors.green.shade100,
-        ),
-        body: const Center(
-          // Cambiamos el texto para saber que funcionó
-          child: Text('¡Proyecto Conectado a Firebase!'),
-        ),
-      ),
+      home: const AuthGate(),
     );
   }
 }
