@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "413767096784",
+    "project_id": "casazenn-e3982",
+    "storage_bucket": "casazenn-e3982.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:413767096784:android:1d320ef10c9a83016101d5",
+        "android_client_info": {
+          "package_name": "com.example.casazenn"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXMNaJZNay2d_knYAMKcrA0cKNcs1KUzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
