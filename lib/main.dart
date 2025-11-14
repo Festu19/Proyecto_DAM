@@ -4,15 +4,12 @@ import 'package:casazenn/auth/auth_gate.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-
-// 1. AÑADE ESTA IMPORTACIÓN
 import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. AÑADE ESTA LÍNEA ANTES DE INICIALIZAR FIREBASE
-  await initializeDateFormatting('es_ES', null);
+    await initializeDateFormatting('es_ES', null);
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

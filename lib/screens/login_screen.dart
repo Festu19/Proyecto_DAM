@@ -37,6 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
       // No necesitamos hacer nada más aquí.
       
     } catch (e) {
+
+      if (!mounted) return;
       // Si el servicio lanza una excepción (error), la mostramos en un diálogo
       String errorMessage = "Ha ocurrido un error. Inténtalo de nuevo.";
       if (e.toString().contains('user-not-found')) {
