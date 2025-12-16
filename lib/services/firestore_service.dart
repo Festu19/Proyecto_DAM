@@ -96,17 +96,40 @@ Stream<DocumentSnapshot> getHomeStream(String homeId) {
 Stream<QuerySnapshot> getHomeMembersStream(String homeId) {
   return _db.collection('users').where('homeId', isEqualTo: homeId).orderBy('name').snapshots();
 }
+// Actualiza una tarea existente
+  Future<void> updateTask(String homeId, String taskId, String title, {DateTime? date, List<int>? repeatDays}) {
+    DateTime? cleanDate;
+    if (date != null) {
+      cleanDate = DateTime(date.year, date.month, date.day);
+    }
+
+    return _db.collection('homes').doc(homeId).collection('tasks').doc(taskId).update({
+      'title': title,
+      'date': cleanDate != null ? Timestamp.fromDate(cleanDate) : null,
+      'repeatDays': repeatDays, // Puede ser null si cambiamos de repetitiva a normal
+    });
+  }
 
 // --- MÉTODOS DE TAREAS (AHORA DEPENDEN DE HOMEID) ---
 
-// Añade una tarea a una casa específica
-Future<void> addTaskToHome(String homeId, String taskTitle) {
-  return _db.collection('homes').doc(homeId).collection('tasks').add({
-    'title': taskTitle,
-    'isDone': false,
-    'timestamp': Timestamp.now(),
-  });
-}
+
+// --- MÉTODOS DE TAREAS (MODIFICADO) ---
+
+  // Añade una tarea con fecha opcional O días de repetición
+  Future<void> addTaskToHome(String homeId, String taskTitle, {DateTime? date, List<int>? repeatDays}) {
+    DateTime? cleanDate;
+    if (date != null) {
+      cleanDate = DateTime(date.year, date.month, date.day);
+    }
+
+    return _db.collection('homes').doc(homeId).collection('tasks').add({
+      'title': taskTitle,
+      'isDone': false,
+      'timestamp': Timestamp.now(),
+      'date': cleanDate != null ? Timestamp.fromDate(cleanDate) : null,
+      'repeatDays': repeatDays, // <--- AHORA GUARDAMOS ESTO
+    });
+  }
 
 // Obtiene las tareas de una casa en tiempo real
 Stream<QuerySnapshot> getTasksStreamForHome(String homeId) {
@@ -152,5 +175,25 @@ Future<void> toggleTaskCompletion(String homeId, Task task, String userId) async
 Future<void> deleteTaskFromHome(String homeId, String taskId) {
   return _db.collection('homes').doc(homeId).collection('tasks').doc(taskId).delete();
 }
+// NUEVO: Borra todas las tareas completadas de una casa en lote
+  Future<void> deleteCompletedTasks(String homeId) async {
+    // 1. Buscamos todas las tareas que tengan isDone == true
+    final snapshot = await _db
+        .collection('homes')
+        .doc(homeId)
+        .collection('tasks')
+        .where('isDone', isEqualTo: true)
+        .get();
 
+    // 2. Iniciamos un lote de escritura (Batch)
+    WriteBatch batch = _db.batch();
+
+    // 3. Añadimos cada operación de borrado al lote
+    for (var doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+
+    // 4. Ejecutamos todas las operaciones juntas
+    await batch.commit();
+  }
 }

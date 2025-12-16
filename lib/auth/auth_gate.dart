@@ -3,7 +3,8 @@
 import 'package:casazenn/models/user_model.dart';
 import 'package:casazenn/screens/select_home_screen.dart';
 import 'package:casazenn/services/firestore_service.dart';
-import 'package:casazenn/widgets/loading_screen.dart'; // ¡Importamos la nueva pantalla!
+import 'package:casazenn/widgets/loading_screen.dart';
+import 'package:casazenn/screens/main_layout.dart'; 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,9 @@ class AuthGate extends StatelessWidget {
             
             // --- LÓGICA DE DECISIÓN ---
             if (userModel.homeId != null) {
-              return const HomeScreen();
+              // --- CAMBIO AQUÍ ---
+              // En lugar de ir directo a HomeScreen, vamos al Layout con pestañas
+              return const MainLayout();
             } else {
               return SelectHomeScreen(user: authSnapshot.data!);
             }

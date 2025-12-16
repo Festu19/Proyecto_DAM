@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -21,9 +22,8 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
-  final _taskController = TextEditingController();
-
-  // Obtenemos el ID del usuario actual de forma segura
+  // El controller ya no lo necesitamos global, lo creamos dentro del dialogo
+  
   String get currentUserId => FirebaseAuth.instance.currentUser!.uid;
 
   @override
@@ -38,15 +38,13 @@ class _HomeScreenState extends State<HomeScreen> {
         final user = userSnapshot.data!;
         final homeId = user.homeId;
 
-        // Si por alguna razón el usuario no tiene homeId, mostramos un error
         if (homeId == null) {
           return Scaffold(
             appBar: AppBar(title: const Text("Error")),
-            body: const Center(child: Text("No perteneces a ningún hogar. Intenta iniciar session de neuvo o crear un nuevo hogar")),
+            body: const Center(child: Text("No perteneces a ningún hogar.")),
           );
         }
 
-        // Si tenemos el homeId, construimos la pantalla principal
         return StreamBuilder<DocumentSnapshot>(
           stream: _firestoreService.getHomeStream(homeId),
           builder: (context, homeSnapshot) {
@@ -75,12 +73,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    
                     // --- SECCIÓN DE TAREAS ---
-                    _buildSectionHeader(
-                      title: 'Tareas del hogar',
-                      buttonText: 'Añadir tarea',
-                      onPressed: () => _showAddTaskDialog(context, homeId),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Tareas: ${toBeginningOfSentenceCase(DateFormat('EEEE d', 'es_ES').format(DateTime.now()))}', 
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+                        ),
+                        
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.cleaning_services_outlined, color: Colors.orange),
+                              tooltip: 'Limpiar completadas',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('¿Limpiar tareas?'),
+                                    content: const Text('Se borrarán todas las tareas marcadas como completadas.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx), 
+                                        child: const Text('Cancelar')
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          _firestoreService.deleteCompletedTasks(homeId);
+                                          Navigator.pop(ctx);
+                                        },
+                                        child: const Text('Borrar'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            TextButton.icon(
+                              icon: const Icon(Icons.add),
+                              label: const Text('Añadir'),
+                              // Usamos el NUEVO diálogo unificado
+                              onPressed: () => _showTaskDialog(context, homeId),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
+                    
                     _buildTasksList(homeId),
 
                     const SizedBox(height: 24),
@@ -89,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildSectionHeader(
                       title: 'Miembros de la casa',
                       buttonText: 'Añadir miembro',
-                      onPressed: () {}, // Lógica para añadir miembros
+                      onPressed: () {}, 
                     ),
                     _buildMembersList(homeId),
                   ],
@@ -109,23 +150,51 @@ class _HomeScreenState extends State<HomeScreen> {
       stream: _firestoreService.getTasksStreamForHome(homeId),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const CircularProgressIndicator();
-        if (snapshot.data!.docs.isEmpty) return const Text('No hay tareas. ¡Añade la primera!');
+        if (snapshot.data!.docs.isEmpty) return const Text('No hay tareas.');
         
-        final tasks = snapshot.data!.docs.map((doc) => Task.fromFirestore(doc)).toList();
+        final allTasks = snapshot.data!.docs.map((doc) => Task.fromFirestore(doc)).toList();
+
+        // FILTRO BLINDADO
+        final tasksToShow = allTasks.where((task) {
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          
+          if (task.repeatDays != null && task.repeatDays!.isNotEmpty) {
+            return task.repeatDays!.contains(now.weekday);
+          }
+          if (task.repeatDays != null && task.repeatDays!.isEmpty) return false;
+          if (task.date == null) return true;
+
+          final taskDate = DateTime(task.date!.year, task.date!.month, task.date!.day);
+          return !taskDate.isAfter(today); 
+        }).toList();
+
+        if (tasksToShow.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Text('¡Todo limpio por hoy!'),
+          );
+        }
 
         return ListView.builder(
-          itemCount: tasks.length,
+          itemCount: tasksToShow.length,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
-            final task = tasks[index];
+            final task = tasksToShow[index];
             return Card(
               child: ListTile(
+                // AL PULSAR EN LA TAREA -> EDITAR
+                onTap: () => _showTaskDialog(context, homeId, taskToEdit: task),
+                subtitle: (task.date != null && task.date!.isBefore(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day))) 
+                  ? Text(
+                      'Atrasada del ${task.date!.day}/${task.date!.month}', 
+                      style: const TextStyle(color: Colors.red, fontSize: 12)
+                    )
+                  : null,
                 title: Text(task.title, style: TextStyle(decoration: task.isDone ? TextDecoration.lineThrough : null)),
                 trailing: Checkbox(
                   value: task.isDone,
-                  // --- ÚNICO CAMBIO REALIZADO ---
-                  // Se llama al nuevo método que maneja la transacción de puntos.
                   onChanged: (val) {
                     _firestoreService.toggleTaskCompletion(homeId, task, currentUserId);
                   },
@@ -154,7 +223,6 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const NeverScrollableScrollPhysics(),
           itemBuilder: (context, index) {
             final member = members[index];
-            
             final bool isCurrentUser = member.uid == currentUserId;
 
             return Card(
@@ -165,10 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(member.name),
                     const SizedBox(width: 8),
                     if (isCurrentUser)
-                      const Text(
-                        '(Tú)',
-                        style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-                      ),
+                      const Text('(Tú)', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
                   ],
                 ),
                 trailing: Text('${member.points} Puntos', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
@@ -180,31 +245,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- DIÁLOGOS Y HELPERS ---
+  // --- DIÁLOGOS ---
 
-  void _showAddTaskDialog(BuildContext context, String homeId) {
-    _taskController.clear();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Añadir Tarea'),
-        content: TextField(controller: _taskController, autofocus: true),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-          ElevatedButton(
-            onPressed: () {
-              if (_taskController.text.isNotEmpty) {
-                _firestoreService.addTaskToHome(homeId, _taskController.text);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
-  }
-  
   void _showInviteCodeDialog(BuildContext context, String inviteCode) {
     showDialog(
       context: context,
@@ -213,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Comparte este código con otros para que se unan a tu hogar:'),
+            const Text('Comparte este código con otros:'),
             const SizedBox(height: 16),
             SelectableText(
               inviteCode,
@@ -227,7 +269,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Clipboard.setData(ClipboardData(text: inviteCode));
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('¡Código copiado!')));
             },
-            child: const Text('Copiar Código'),
+            child: const Text('Copiar'),
           ),
           ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Cerrar')),
         ],
@@ -242,6 +284,136 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         TextButton.icon(icon: const Icon(Icons.add), label: Text(buttonText), onPressed: onPressed),
       ],
+    );
+  }
+
+  // --- DIÁLOGO UNIFICADO DE TAREA (COPIADO DE CALENDAR) ---
+  void _showTaskDialog(BuildContext context, String homeId, {Task? taskToEdit}) {
+    final taskController = TextEditingController();
+    
+    if (taskToEdit != null) {
+      taskController.text = taskToEdit.title;
+    }
+
+    List<int> selectedRepeatDays = [];
+    bool isRepeating = false;
+
+    if (taskToEdit != null) {
+      if (taskToEdit.repeatDays != null && taskToEdit.repeatDays!.isNotEmpty) {
+        isRepeating = true;
+        selectedRepeatDays = List.from(taskToEdit.repeatDays!);
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text(taskToEdit == null ? 'Nueva Tarea' : 'Editar Tarea'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: taskController,
+                    autofocus: true,
+                    decoration: const InputDecoration(hintText: "¿Qué hay que hacer?"),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Text("Repetir semanalmente"),
+                      const Spacer(),
+                      Switch(
+                        value: isRepeating,
+                        onChanged: (val) {
+                          setStateDialog(() {
+                            isRepeating = val;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                  if (isRepeating)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Wrap(
+                        spacing: 5,
+                        children: [
+                          _buildDayButton(1, "L", selectedRepeatDays, setStateDialog),
+                          _buildDayButton(2, "M", selectedRepeatDays, setStateDialog),
+                          _buildDayButton(3, "X", selectedRepeatDays, setStateDialog),
+                          _buildDayButton(4, "J", selectedRepeatDays, setStateDialog),
+                          _buildDayButton(5, "V", selectedRepeatDays, setStateDialog),
+                          _buildDayButton(6, "S", selectedRepeatDays, setStateDialog),
+                          _buildDayButton(7, "D", selectedRepeatDays, setStateDialog),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+                ElevatedButton(
+                  onPressed: () {
+                    if (taskController.text.isNotEmpty) {
+                      List<int>? finalRepeatDays = isRepeating ? selectedRepeatDays : null;
+                      DateTime? finalDate;
+                      
+                      // Si editamos y pasamos a puntual, usaremos HOY por defecto
+                      if (!isRepeating) {
+                        finalDate = taskToEdit?.date ?? DateTime.now();
+                      }
+
+                      if (taskToEdit == null) {
+                        _firestoreService.addTaskToHome(
+                          homeId, 
+                          taskController.text, 
+                          date: finalDate, 
+                          repeatDays: finalRepeatDays
+                        );
+                      } else {
+                        _firestoreService.updateTask(
+                          homeId, 
+                          taskToEdit.id, 
+                          taskController.text,
+                          date: finalDate,
+                          repeatDays: finalRepeatDays
+                        );
+                      }
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('Guardar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildDayButton(int dayNum, String label, List<int> selectedDays, Function setStateDialog) {
+    final isSelected = selectedDays.contains(dayNum);
+    return GestureDetector(
+      onTap: () {
+        setStateDialog(() {
+          if (isSelected) {
+            selectedDays.remove(dayNum);
+          } else {
+            selectedDays.add(dayNum);
+          }
+        });
+      },
+      child: CircleAvatar(
+        radius: 16,
+        backgroundColor: isSelected ? Colors.green : Colors.grey.shade200,
+        foregroundColor: isSelected ? Colors.white : Colors.black,
+        child: Text(label, style: const TextStyle(fontSize: 12)),
+      ),
     );
   }
 }
