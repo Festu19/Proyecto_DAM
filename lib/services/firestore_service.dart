@@ -196,4 +196,84 @@ Future<void> deleteTaskFromHome(String homeId, String taskId) {
     // 4. Ejecutamos todas las operaciones juntas
     await batch.commit();
   }
+
+
+  // --- MÉTODOS DE LA TIENDA DE RECOMPENSAS ---
+
+  // Obtener stream de recompensas
+  Stream<QuerySnapshot> getRewardsStream(String homeId) {
+    return _db.collection('homes').doc(homeId).collection('rewards').orderBy('cost').snapshots();
+  }
+
+  // Añadir una recompensa
+  Future<void> addReward(String homeId, String title, int cost, String iconName) {
+    return _db.collection('homes').doc(homeId).collection('rewards').add({
+      'title': title,
+      'cost': cost,
+      'icon': iconName,
+    });
+  }
+
+  // Borrar una recompensa
+  Future<void> deleteReward(String homeId, String rewardId) {
+    return _db.collection('homes').doc(homeId).collection('rewards').doc(rewardId).delete();
+  }
+
+// --- MÉTODOS DE HISTORIAL Y CANJE ---
+
+  // Obtener historial de actividad
+  Stream<QuerySnapshot> getHistoryStream(String homeId) {
+    return _db
+        .collection('homes')
+        .doc(homeId)
+        .collection('history')
+        .orderBy('timestamp', descending: true) // Lo más nuevo arriba
+        .limit(20) // Solo los últimos 20 mensajes
+        .snapshots();
+  }
+
+  // CANJEAR RECOMPENSA (Modificado para guardar historial)
+  Future<bool> redeemReward(String userId, String homeId, String userName, String rewardTitle, int cost) async {
+    final userRef = _db.collection('users').doc(userId);
+    final historyRef = _db.collection('homes').doc(homeId).collection('history');
+
+    try {
+      await _db.runTransaction((transaction) async {
+        final userSnapshot = await transaction.get(userRef);
+        if (!userSnapshot.exists) throw Exception("Usuario no encontrado");
+
+        final currentPoints = userSnapshot.data()!['points'] as int;
+
+        if (currentPoints < cost) {
+          throw Exception("No tienes suficientes puntos");
+        }
+
+        // 1. Restamos los puntos
+        transaction.update(userRef, {'points': currentPoints - cost});
+
+        // 2. Creamos el registro en el historial
+        // Nota: En una transacción real de Firestore, las creaciones se hacen después, 
+        // pero para simplificar lo haremos fuera de la transacción visualmente o 
+        // simplemente usamos una escritura batch si fuera crítico. 
+        // Aquí lo haremos justo después del await de la transacción para no complicar la lógica de bloqueo.
+      });
+
+      // 3. Escribimos en el historial (Fuera de la transacción estricta para simplificar, pero seguro)
+      await historyRef.add({
+        'text': '$userName ha canjeado: $rewardTitle',
+        'cost': cost,
+        'timestamp': Timestamp.now(),
+        'type': 'redemption', // Por si en el futuro registramos tareas completadas también
+      });
+
+      return true; 
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
+  // Borrar un item del historial (para marcar como cumplido)
+  Future<void> deleteHistoryItem(String homeId, String historyId) {
+    return _db.collection('homes').doc(homeId).collection('history').doc(historyId).delete();
+  }
 }
