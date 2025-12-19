@@ -24,9 +24,9 @@ class Task {
       id: doc.id,
       title: data['title'] ?? '',
       isDone: data['isDone'] ?? false,
-      // Corrección 1: Aseguramos que la fecha se lea bien
+      // Aseguramos que la fecha se lea bien
       date: data['date'] != null ? (data['date'] as Timestamp).toDate() : null,
-      // Corrección 2: Lectura BLINDADA de la lista de números.
+      // Lectura BLINDADA de la lista de números.
       // Esto evita errores si Firebase guarda los números en formato raro.
       repeatDays: data['repeatDays'] != null 
           ? (data['repeatDays'] as List).map((e) => e as int).toList() 

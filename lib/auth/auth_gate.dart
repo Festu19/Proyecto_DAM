@@ -52,7 +52,6 @@ class AuthGate extends StatelessWidget {
             
             // --- LÓGICA DE DECISIÓN ---
             if (userModel.homeId != null) {
-              // --- CAMBIO AQUÍ ---
               // En lugar de ir directo a HomeScreen, vamos al Layout con pestañas
               return const MainLayout();
             } else {

@@ -242,10 +242,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       // DATOS FINALES A GUARDAR
                       List<int>? finalRepeatDays = isRepeating ? selectedRepeatDays : null;
                       
-                      // Si editamos repetitiva -> fecha null. Si es puntual -> fecha seleccionada
-                      // NOTA: Si estamos editando y cambiamos de repetitiva a puntual, 
-                      // necesitamos una fecha. Si no nos pasan 'date' (porque venimos de editar),
-                      // usaremos Hoy o la fecha original de la tarea si la tenía.
+               
                       DateTime? finalDate;
                       if (!isRepeating) {
                         finalDate = date ?? taskToEdit?.date ?? DateTime.now();

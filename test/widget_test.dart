@@ -11,9 +11,8 @@ class Task {
   final String id;
   final String title;
   final bool isDone;
-  final DateTime? date; // Fecha específica (opcional)
-  final List<int>? repeatDays; // Días de la semana: 1=Lunes, 7=Domingo (opcional)
-
+  final DateTime? date; 
+  final List<int>? repeatDays; 
   Task({
     required this.id,
     required this.title,

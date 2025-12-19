@@ -22,7 +22,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final FirestoreService _firestoreService = FirestoreService();
-  // El controller ya no lo necesitamos global, lo creamos dentro del dialogo
+  
   
   String get currentUserId => FirebaseAuth.instance.currentUser!.uid;
 
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Row(
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.cleaning_services_outlined, color: Colors.orange),
+                              icon: const Icon(Icons.cleaning_services_outlined, color: Colors.green),
                               tooltip: 'Limpiar completadas',
                               onPressed: () {
                                 showDialog(

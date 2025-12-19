@@ -5,7 +5,7 @@ class RewardModel {
   final String id;
   final String title;
   final int cost;
-  final String icon; // Guardaremos el nombre del icono como String (ej: "fastfood")
+  final String icon; 
 
   RewardModel({
     required this.id,

@@ -7,7 +7,7 @@ class UserModel {
   final String name;
   final String email;
   final int points;
-  final String? homeId; // Puede ser nulo si el usuario aún no se ha unido a una casa
+  final String? homeId; 
 
   UserModel({
     required this.uid,
@@ -24,7 +24,7 @@ class UserModel {
       name: data['name'] ?? 'Sin Nombre',
       email: data['email'] ?? '',
       points: data['points'] ?? 0,
-      homeId: data['homeId'], // Firestore maneja bien los campos nulos
+      homeId: data['homeId'], 
     );
   }
 }

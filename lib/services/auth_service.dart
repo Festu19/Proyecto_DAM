@@ -18,15 +18,13 @@ class AuthService {
       );
       return userCredential;
     } on FirebaseAuthException catch (e) {
-      // Si Firebase nos da un error (ej: contraseña incorrecta), lo capturamos
-      // y lo lanzamos como una excepción para que la pantalla de login lo pueda gestionar.
-      // e.code nos dará el tipo de error (ej: 'wrong-password', 'user-not-found')
+           
       throw Exception(e.code);
     }
   }
 
   // --- MÉTODO PARA REGISTRAR UN NUEVO USUARIO ---
-  // Lo dejaremos aquí listo para el siguiente paso
+  
   Future<UserCredential> signUpWithEmailAndPassword(String email, String password, String name) async {
     try {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -47,7 +45,7 @@ class AuthService {
   }
 
   // --- MÉTODO PARA CERRAR SESIÓN ---
-  // También lo dejaremos listo para usarlo más adelante
+  
   Future<void> signOut() async {
     return await _auth.signOut();
   }

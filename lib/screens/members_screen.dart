@@ -1,14 +1,12 @@
 // lib/screens/members_screen.dart
 
-// lib/screens/members_screen.dart
-
 import 'package:casazenn/models/reward_model.dart';
 import 'package:casazenn/models/user_model.dart';
 import 'package:casazenn/services/firestore_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Para formatear la fecha del historial
+import 'package:intl/intl.dart'; 
 
 class MembersScreen extends StatefulWidget {
   const MembersScreen({super.key});
@@ -57,7 +55,7 @@ class _MembersScreenState extends State<MembersScreen> with SingleTickerProvider
               // PESTAÑA 1: RANKING + HISTORIAL
               Column(
                 children: [
-                  // Parte superior: El Ranking (ocupa el espacio disponible)
+                  // Parte superior: El Ranking 
                   Expanded(flex: 3, child: _buildMembersList(homeId)),
                   
                   const Divider(thickness: 2),
@@ -66,7 +64,7 @@ class _MembersScreenState extends State<MembersScreen> with SingleTickerProvider
                     child: Text("📜 Historial de Actividad", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
                   ),
                   
-                  // Parte inferior: Historial (ocupa menos espacio)
+                  // Parte inferior: Historial 
                   Expanded(flex: 2, child: _buildHistoryList(homeId)),
                 ],
               ),
@@ -143,7 +141,7 @@ class _MembersScreenState extends State<MembersScreen> with SingleTickerProvider
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: historyDocs.length,
           itemBuilder: (context, index) {
-            final doc = historyDocs[index]; // Necesitamos el doc para su ID
+            final doc = historyDocs[index]; 
             final data = doc.data() as Map<String, dynamic>;
             final text = data['text'] ?? '';
             final timestamp = data['timestamp'] as Timestamp?;
@@ -154,7 +152,7 @@ class _MembersScreenState extends State<MembersScreen> with SingleTickerProvider
             return Card(
               color: Colors.grey.shade50,
               margin: const EdgeInsets.only(bottom: 8),
-              child: InkWell( // <--- Añadimos InkWell para detectar pulsaciones
+              child: InkWell( 
                 onLongPress: () {
                   // Mostrar diálogo de confirmación
                   showDialog(
@@ -194,7 +192,7 @@ class _MembersScreenState extends State<MembersScreen> with SingleTickerProvider
     );
   }
 
-  // Modificado: Ahora pasamos el objeto user completo para tener el nombre
+  
   Widget _buildRewardsShop(String homeId, UserModel currentUser) {
     return Column(
       children: [

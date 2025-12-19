@@ -11,7 +11,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  // AÑADIMOS UN CONTROLADOR PARA EL NOMBRE
+  
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -27,7 +27,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _signUp() async {
     try {
-      // AHORA PASAMOS TAMBIÉN EL NOMBRE AL MÉTODO DE REGISTRO
+      
       await _authService.signUpWithEmailAndPassword(
         _emailController.text,
         _passwordController.text,
@@ -36,7 +36,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      // ... (el manejo de errores es el mismo)
+      //Manejo de errores
     }
   }
 
@@ -45,7 +45,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Registrarse'),
-        // ... (el resto del appbar es igual)
+        
       ),
       backgroundColor: Colors.white,
       body: Center(
@@ -54,7 +54,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // AÑADIMOS EL CAMPO DE TEXTO PARA EL NOMBRE
+              
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),

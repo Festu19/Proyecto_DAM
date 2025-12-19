@@ -6,7 +6,7 @@ class HomeModel {
   final String id;
   final String name;
   final String inviteCode;
-  final List<String> members; // Lista de UIDs de los miembros
+  final List<String> members; 
 
   HomeModel({
     required this.id,

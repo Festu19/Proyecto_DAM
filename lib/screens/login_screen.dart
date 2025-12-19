@@ -33,13 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
         _emailController.text,
         _passwordController.text,
       );
-      // Si el login es correcto, el AuthGate se encargará de llevarnos a la HomeScreen.
-      // No necesitamos hacer nada más aquí.
+    
       
     } catch (e) {
 
       if (!mounted) return;
-      // Si el servicio lanza una excepción (error), la mostramos en un diálogo
+      
       String errorMessage = "Ha ocurrido un error. Inténtalo de nuevo.";
       if (e.toString().contains('user-not-found')) {
         errorMessage = "No se ha encontrado un usuario con ese email.";
@@ -63,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // El resto del widget (la parte visual) es exactamente igual
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(

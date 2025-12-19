@@ -3,7 +3,7 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:casazenn/models/user_model.dart'; 
-import 'package:casazenn/models/task.dart';// ¡Importante!
+import 'package:casazenn/models/task.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -16,7 +16,7 @@ class FirestoreService {
       'email': email,
       'name': name,
       'points': 0,
-      'homeId': null, // Nulo por defecto al crear el usuario
+      'homeId': null, 
       'timestamp': Timestamp.now(),
     });
   }
@@ -52,7 +52,7 @@ class FirestoreService {
     await newHomeRef.set({
       'name': homeName,
       'inviteCode': inviteCode,
-      'members': [userId], // El creador es el primer miembro
+      'members': [userId], 
     });
 
     // Actualiza el perfil del usuario con el nuevo homeId
@@ -84,15 +84,15 @@ class FirestoreService {
       return homeDoc.id;
     }
     
-    return null; // Retorna nulo si no se encontró el código
+    return null; // Devuelve null si no se encontró el código
   }
 
-// Obtiene los datos de una casa específica en tiempo real
+// Obtiene los datos de una casa específica 
 Stream<DocumentSnapshot> getHomeStream(String homeId) {
   return _db.collection('homes').doc(homeId).snapshots();
 }
 
-// Obtiene la lista de miembros de una casa en tiempo real
+// Obtiene la lista de miembros de una casa 
 Stream<QuerySnapshot> getHomeMembersStream(String homeId) {
   return _db.collection('users').where('homeId', isEqualTo: homeId).orderBy('name').snapshots();
 }
@@ -106,14 +106,14 @@ Stream<QuerySnapshot> getHomeMembersStream(String homeId) {
     return _db.collection('homes').doc(homeId).collection('tasks').doc(taskId).update({
       'title': title,
       'date': cleanDate != null ? Timestamp.fromDate(cleanDate) : null,
-      'repeatDays': repeatDays, // Puede ser null si cambiamos de repetitiva a normal
+      'repeatDays': repeatDays, 
     });
   }
 
-// --- MÉTODOS DE TAREAS (AHORA DEPENDEN DE HOMEID) ---
 
 
-// --- MÉTODOS DE TAREAS (MODIFICADO) ---
+
+// --- MÉTODOS DE TAREAS ---
 
   // Añade una tarea con fecha opcional O días de repetición
   Future<void> addTaskToHome(String homeId, String taskTitle, {DateTime? date, List<int>? repeatDays}) {
@@ -127,7 +127,7 @@ Stream<QuerySnapshot> getHomeMembersStream(String homeId) {
       'isDone': false,
       'timestamp': Timestamp.now(),
       'date': cleanDate != null ? Timestamp.fromDate(cleanDate) : null,
-      'repeatDays': repeatDays, // <--- AHORA GUARDAMOS ESTO
+      'repeatDays': repeatDays,
     });
   }
 
@@ -142,7 +142,7 @@ Stream<QuerySnapshot> getTasksStreamForHome(String homeId) {
 }
 
 Future<void> toggleTaskCompletion(String homeId, Task task, String userId) async {
-  // Definimos cuántos puntos vale una tarea (podemos hacerlo dinámico en el futuro)
+  // Definimos cuántos puntos vale una tarea 
   const int taskPoints = 10;
 
   // Obtenemos las referencias a los dos documentos que vamos a modificar
@@ -151,7 +151,7 @@ Future<void> toggleTaskCompletion(String homeId, Task task, String userId) async
 
   // Ejecutamos una transacción para asegurar que ambas escrituras fallen o tengan éxito juntas
   return _db.runTransaction((transaction) async {
-    // Leemos el documento del usuario DENTRO de la transacción
+    
     final userSnapshot = await transaction.get(userRef);
 
     if (!userSnapshot.exists) {
@@ -185,7 +185,7 @@ Future<void> deleteTaskFromHome(String homeId, String taskId) {
         .where('isDone', isEqualTo: true)
         .get();
 
-    // 2. Iniciamos un lote de escritura (Batch)
+    // 2. Iniciamos un lote de escritura 
     WriteBatch batch = _db.batch();
 
     // 3. Añadimos cada operación de borrado al lote
@@ -227,12 +227,12 @@ Future<void> deleteTaskFromHome(String homeId, String taskId) {
         .collection('homes')
         .doc(homeId)
         .collection('history')
-        .orderBy('timestamp', descending: true) // Lo más nuevo arriba
-        .limit(20) // Solo los últimos 20 mensajes
+        .orderBy('timestamp', descending: true) 
+        .limit(20) 
         .snapshots();
   }
 
-  // CANJEAR RECOMPENSA (Modificado para guardar historial)
+  // CANJEAR RECOMPENSA 
   Future<bool> redeemReward(String userId, String homeId, String userName, String rewardTitle, int cost) async {
     final userRef = _db.collection('users').doc(userId);
     final historyRef = _db.collection('homes').doc(homeId).collection('history');
@@ -252,10 +252,7 @@ Future<void> deleteTaskFromHome(String homeId, String taskId) {
         transaction.update(userRef, {'points': currentPoints - cost});
 
         // 2. Creamos el registro en el historial
-        // Nota: En una transacción real de Firestore, las creaciones se hacen después, 
-        // pero para simplificar lo haremos fuera de la transacción visualmente o 
-        // simplemente usamos una escritura batch si fuera crítico. 
-        // Aquí lo haremos justo después del await de la transacción para no complicar la lógica de bloqueo.
+                 
       });
 
       // 3. Escribimos en el historial (Fuera de la transacción estricta para simplificar, pero seguro)
@@ -263,7 +260,7 @@ Future<void> deleteTaskFromHome(String homeId, String taskId) {
         'text': '$userName ha canjeado: $rewardTitle',
         'cost': cost,
         'timestamp': Timestamp.now(),
-        'type': 'redemption', // Por si en el futuro registramos tareas completadas también
+        'type': 'redemption', 
       });
 
       return true; 

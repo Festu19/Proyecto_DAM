@@ -26,7 +26,7 @@ class _SelectHomeScreenState extends State<SelectHomeScreen> {
   }
 
   
-// --- LÓGICA PARA CREAR HOGAR (VERSIÓN "DISPARA Y OLVIDA" SIMPLE) ---
+// --- LÓGICA PARA CREAR HOGAR  ---
 void _showCreateHomeDialog() {
   _homeNameController.clear();
   showDialog<void>(
@@ -45,14 +45,14 @@ void _showCreateHomeDialog() {
             child: const Text("Cancelar"),
           ),
           ElevatedButton(
-            onPressed: () { // ¡NO es async!
+            onPressed: () { 
               if (_homeNameController.text.isNotEmpty) {
                 // "Disparamos" la orden y no esperamos.
                 _firestoreService.createHome(
                   _homeNameController.text,
                   widget.user.uid,
                 );
-                // Cerramos el diálogo INMEDIATAMENTE.
+               
                 Navigator.pop(dialogContext);
               }
             },
@@ -63,7 +63,7 @@ void _showCreateHomeDialog() {
     },
   );
 }
-// --- LÓGICA PARA UNIRSE A HOGAR (VERSIÓN SIMPLE "DISPARA Y OLVIDA") ---
+// --- LÓGICA PARA UNIRSE A HOGAR ---
 void _showJoinHomeDialog() {
   _inviteCodeController.clear();
   showDialog<void>(
@@ -83,7 +83,7 @@ void _showJoinHomeDialog() {
             child: const Text("Cancelar"),
           ),
           ElevatedButton(
-            onPressed: () { // ¡NO es async!
+            onPressed: () { 
               if (_inviteCodeController.text.isNotEmpty) {
                 // "Disparamos" la orden y no esperamos.
                 _firestoreService.joinHome(
@@ -100,11 +100,10 @@ void _showJoinHomeDialog() {
       );
     },
   );
-  // Al igual que con "Crear", no podemos mostrar el error "código no válido"
-  // con este patrón simple, pero evitamos todos los errores.
+
 }
 
-  // --- ESTE ES EL MÉTODO QUE FALTABA ---
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

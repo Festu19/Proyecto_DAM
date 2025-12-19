@@ -3,7 +3,7 @@
 
 import 'package:casazenn/screens/calendar_screen.dart';
 import 'package:casazenn/screens/home_screen.dart';
-import 'package:casazenn/screens/members_screen.dart'; // <--- IMPORT NUEVO
+import 'package:casazenn/screens/members_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainLayout extends StatefulWidget {
@@ -48,7 +48,7 @@ class _MainLayoutState extends State<MainLayout> {
           NavigationDestination(
             icon: Icon(Icons.people_outline),
             selectedIcon: Icon(Icons.people),
-            label: 'Miembros', // Aquí está la Tienda dentro
+            label: 'Miembros', 
           ),
         ],
       ),
